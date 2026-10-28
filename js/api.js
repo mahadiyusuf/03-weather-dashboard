@@ -1,11 +1,14 @@
 const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
-export async function fetchJson(url) {
+export async function fetchJson(url, signal) {
   let response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, { signal });
   } catch (error) {
+    if (error.name === "AbortError") {
+      throw error;
+    }
     throw new Error(`Could not connect to Open-Meteo: ${error.message}`, { cause: error });
   }
 
@@ -20,17 +23,21 @@ export async function fetchJson(url) {
   }
 }
 
-export async function searchCity(name) {
+export async function searchCity(name, signal) {
   const url = `${GEOCODING_URL}?name=${encodeURIComponent(name)}&count=5`;
   let data;
   try {
-    data = await fetchJson(url);
+    data = await fetchJson(url, signal);
   } catch (error) {
+    if (error.name === "AbortError") {
+      throw error;
+    }
     throw new Error(`City search failed: ${error.message}`, { cause: error });
   }
 
-  return (data.results ?? []).map(({ name: cityName, country, latitude, longitude, timezone }) => ({
+  return (data.results ?? []).map(({ name: cityName, admin1, country, latitude, longitude, timezone }) => ({
     name: cityName,
+    admin1,
     country,
     latitude,
     longitude,
@@ -38,7 +45,7 @@ export async function searchCity(name) {
   }));
 }
 
-export async function getForecast(latitude, longitude) {
+export async function getForecast(latitude, longitude, signal) {
   const params = new URLSearchParams({
     latitude: String(latitude),
     longitude: String(longitude),
@@ -48,8 +55,11 @@ export async function getForecast(latitude, longitude) {
   });
   let forecast;
   try {
-    forecast = await fetchJson(`${FORECAST_URL}?${params}`);
+    forecast = await fetchJson(`${FORECAST_URL}?${params}`, signal);
   } catch (error) {
+    if (error.name === "AbortError") {
+      throw error;
+    }
     throw new Error(`Weather forecast failed: ${error.message}`, { cause: error });
   }
 

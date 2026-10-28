@@ -25,22 +25,27 @@
           <span class="brand-name">atmos<span>.</span></span>
         </a>
 
-        <form class="search-form" id="search-form" role="search">
-          <label class="sr-only" for="city-search">Search for a city</label>
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="10.8" cy="10.8" r="6.8" />
-            <path d="m16 16 4.2 4.2" />
-          </svg>
-          <input
-            id="city-search"
-            name="city"
-            type="search"
-            placeholder="Search a city..."
-            autocomplete="off"
-            required
-          />
-          <button type="submit">Search</button>
-        </form>
+        <div class="search-area">
+          <form class="search-form" id="search-form" role="search">
+            <label class="sr-only" for="city-search">Search for a city</label>
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8" />
+              <path d="m16 16 4.2 4.2" />
+            </svg>
+            <input
+              id="city-search"
+              name="city"
+              type="search"
+              placeholder="Search a city..."
+              autocomplete="off"
+              required
+              aria-controls="city-matches"
+              aria-expanded="false"
+            />
+            <button type="submit">Search</button>
+          </form>
+          <ul class="city-matches" id="city-matches" role="listbox" aria-label="Matching cities" hidden></ul>
+        </div>
 
         <div class="topbar-note">
           <span class="live-dot" aria-hidden="true"></span>
@@ -69,19 +74,19 @@
                     <path d="M16 8.3c0 4.3-6 9.2-6 9.2S4 12.6 4 8.3a6 6 0 1 1 12 0Z" />
                     <circle cx="10" cy="8" r="2" />
                   </svg>
-                  <span id="current-location">London, United Kingdom</span>
+                  <span id="current-location">Search for a city</span>
                 </div>
                 <h2 class="sr-only" id="current-heading">Current weather</h2>
                 <p class="current-label">Right now</p>
                 <div class="temperature-line">
-                  <span class="temperature" id="current-temperature">18°</span>
-                  <span class="condition-icon" id="current-icon" aria-hidden="true">⛅</span>
+                  <span class="temperature" id="current-temperature">—</span>
+                  <span class="condition-icon" id="current-icon" aria-hidden="true"></span>
                 </div>
-                <p class="condition" id="current-condition">Partly cloudy</p>
+                <p class="condition" id="current-condition">Forecast appears here after search</p>
                 <div class="current-meta">
                   <div class="meta-item">
                     <span class="meta-icon wind-icon" aria-hidden="true">↗</span>
-                    <span><strong id="current-wind">12</strong><small>km/h wind</small></span>
+                    <span><strong id="current-wind">—</strong><small>km/h wind</small></span>
                   </div>
                   <span class="meta-divider" aria-hidden="true"></span>
                   <div class="meta-item">
@@ -115,7 +120,10 @@
                   <p class="eyebrow">PLAN AHEAD</p>
                   <h2 id="forecast-heading">7-day forecast</h2>
                 </div>
-                <span class="forecast-unit">°C</span>
+                <div class="unit-toggle" role="group" aria-label="Temperature unit">
+                  <button class="unit-button" id="unit-celsius" type="button" aria-pressed="true">°C</button>
+                  <button class="unit-button" id="unit-fahrenheit" type="button" aria-pressed="false">°F</button>
+                </div>
               </div>
               <div class="forecast-grid" id="forecast-list" aria-live="polite"></div>
             </section>

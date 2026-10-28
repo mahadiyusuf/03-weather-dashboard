@@ -1,6 +1,9 @@
 import { getWeatherCode } from "./weatherCodes.js";
 
-const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "short" });
+const dayFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: "short",
+  timeZone: "UTC",
+});
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: "long",
   month: "long",
@@ -12,18 +15,23 @@ function getForecastDay(date, index) {
     return "Today";
   }
 
-  return dayFormatter.format(new Date(`${date}T12:00:00`));
+  return dayFormatter.format(new Date(`${date}T00:00:00Z`));
 }
 
 function formatLocalTime(time) {
   return time?.split("T")[1]?.slice(0, 5) ?? "—";
 }
 
+function formatTemperature(value, unit) {
+  const temperature = unit === "fahrenheit" ? (value * 9) / 5 + 32 : value;
+  return `${Math.round(temperature)}°${unit === "fahrenheit" ? "F" : "C"}`;
+}
+
 export function renderTodayDate(element) {
   element.textContent = dateFormatter.format(new Date());
 }
 
-export function renderWeather(location, forecast) {
+export function renderWeather(location, forecast, unit) {
   const { current, daily } = forecast;
   const currentConditions = getWeatherCode(current.weather_code);
   const locationName = location.country
@@ -31,7 +39,7 @@ export function renderWeather(location, forecast) {
     : location.name;
 
   document.querySelector("#current-location").textContent = locationName;
-  document.querySelector("#current-temperature").textContent = `${Math.round(current.temperature_2m)}°`;
+  document.querySelector("#current-temperature").textContent = formatTemperature(current.temperature_2m, unit);
   document.querySelector("#current-condition").textContent = currentConditions.label;
   document.querySelector("#current-icon").textContent = currentConditions.emoji;
   document.querySelector("#current-wind").textContent = Math.round(current.wind_speed_10m);
@@ -43,11 +51,11 @@ export function renderWeather(location, forecast) {
     ...daily.time.map((date, index) => {
       const conditions = getWeatherCode(daily.weather_code[index]);
       const dayName = getForecastDay(date, index);
-      const high = Math.round(daily.temperature_2m_max[index]);
-      const low = Math.round(daily.temperature_2m_min[index]);
+      const high = formatTemperature(daily.temperature_2m_max[index], unit);
+      const low = formatTemperature(daily.temperature_2m_min[index], unit);
       const card = document.createElement("article");
       card.className = "forecast-card";
-      card.setAttribute("aria-label", `${dayName}: ${high} degrees high, ${low} degrees low, ${conditions.label}`);
+      card.setAttribute("aria-label", `${dayName}: ${high} high, ${low} low, ${conditions.label}`);
 
       const dayLabel = document.createElement("span");
       dayLabel.className = "forecast-day";
@@ -61,16 +69,43 @@ export function renderWeather(location, forecast) {
       const temperatures = document.createElement("span");
       temperatures.className = "forecast-temps";
       const highLabel = document.createElement("span");
-      highLabel.textContent = `${high}°`;
+      highLabel.textContent = high;
       const lowLabel = document.createElement("span");
       lowLabel.className = "forecast-low";
-      lowLabel.textContent = `${low}°`;
+      lowLabel.textContent = low;
       temperatures.append(highLabel, lowLabel);
 
       card.append(dayLabel, icon, temperatures);
       return card;
     }),
   );
+}
+
+export function renderCityMatches(cities, onSelect) {
+  const list = document.querySelector("#city-matches");
+  const input = document.querySelector("#city-search");
+  list.replaceChildren(
+    ...cities.map((city) => {
+      const item = document.createElement("li");
+      item.setAttribute("role", "presentation");
+      const button = document.createElement("button");
+      button.className = "city-match-button";
+      button.type = "button";
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", "false");
+      button.textContent = [city.name, city.admin1, city.country].filter(Boolean).join(", ");
+      button.addEventListener("click", () => onSelect(city));
+      item.append(button);
+      return item;
+    }),
+  );
+  list.hidden = cities.length === 0;
+  input.setAttribute("aria-expanded", String(cities.length > 0));
+}
+
+export function renderTemperatureUnit(unit) {
+  document.querySelector("#unit-celsius").setAttribute("aria-pressed", String(unit === "celsius"));
+  document.querySelector("#unit-fahrenheit").setAttribute("aria-pressed", String(unit === "fahrenheit"));
 }
 
 export function renderFavourites(favourites, activeCity, onSelect) {
