@@ -214,9 +214,31 @@ input:focus-visible {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 9px;
-  color: var(--color-muted);
-  font-size: 12px;
+}
+
+.location-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px;
+  border: 1px solid rgba(167, 232, 213, 0.2);
+  border-radius: 11px;
+  color: var(--color-accent);
+  background: rgba(167, 232, 213, 0.06);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.location-button:hover {
+  border-color: rgba(167, 232, 213, 0.44);
+  background: rgba(167, 232, 213, 0.12);
+}
+
+.location-button span {
+  font-size: 16px;
+  line-height: 0.8;
 }
 
 .live-dot {
@@ -286,6 +308,31 @@ main {
   background: rgba(255, 151, 151, 0.07);
 }
 
+.status-skeleton {
+  width: 82px;
+  height: 8px;
+  display: inline-block;
+  margin-left: 5px;
+  vertical-align: 1px;
+}
+
+.skeleton {
+  overflow: hidden;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(201, 216, 238, 0.08) 25%, rgba(201, 216, 238, 0.2) 50%, rgba(201, 216, 238, 0.08) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 286px;
@@ -319,7 +366,42 @@ main {
 .current-copy {
   position: relative;
   z-index: 1;
+  width: 100%;
   padding: 28px 32px 32px;
+}
+
+.favorite-toggle {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 2;
+  width: 37px;
+  height: 37px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(247, 248, 255, 0.17);
+  border-radius: 12px;
+  color: #f2d795;
+  background: rgba(20, 29, 49, 0.48);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  transition: background 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+
+.favorite-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(242, 215, 149, 0.5);
+  background: rgba(20, 29, 49, 0.76);
+}
+
+.favorite-toggle[aria-pressed="true"] {
+  color: #f4d378;
+}
+
+.favorite-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .location-line {
@@ -601,6 +683,27 @@ main {
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
 }
 
+.forecast-skeleton {
+  justify-content: space-between;
+  padding: 17px 12px;
+}
+
+.skeleton-day {
+  width: 34px;
+  height: 9px;
+}
+
+.skeleton-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+}
+
+.skeleton-temperatures {
+  width: 43px;
+  height: 10px;
+}
+
 .forecast-card:hover {
   transform: translateY(-3px);
   border-color: rgba(167, 232, 213, 0.2);
@@ -803,7 +906,7 @@ main {
   }
 
   .topbar-note {
-    display: none;
+    justify-content: flex-end;
   }
 
   .dashboard-grid {
@@ -833,6 +936,10 @@ main {
     grid-template-columns: 1fr;
     gap: 15px;
     padding: 17px 0 16px;
+  }
+
+  .topbar-note {
+    justify-content: center;
   }
 
   .brand {

@@ -48,8 +48,10 @@
         </div>
 
         <div class="topbar-note">
-          <span class="live-dot" aria-hidden="true"></span>
-          Your daily forecast
+          <button class="location-button" id="use-location" type="button">
+            <span aria-hidden="true">⌖</span>
+            Use my location
+          </button>
         </div>
       </header>
 
@@ -69,6 +71,9 @@
           <div class="main-column">
             <section class="current-card glass-card" aria-labelledby="current-heading">
               <div class="current-copy">
+                <button class="favorite-toggle" id="favorite-toggle" type="button" aria-pressed="false" aria-label="Add current city to favourites">
+                  ☆
+                </button>
                 <div class="location-line">
                   <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path d="M16 8.3c0 4.3-6 9.2-6 9.2S4 12.6 4 8.3a6 6 0 1 1 12 0Z" />

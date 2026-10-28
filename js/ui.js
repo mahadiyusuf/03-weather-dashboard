@@ -108,6 +108,50 @@ export function renderTemperatureUnit(unit) {
   document.querySelector("#unit-fahrenheit").setAttribute("aria-pressed", String(unit === "fahrenheit"));
 }
 
+export function renderLoading() {
+  const status = document.querySelector("#status-message");
+  status.replaceChildren(document.createTextNode("Loading weather "));
+  const statusSkeleton = document.createElement("span");
+  statusSkeleton.className = "skeleton status-skeleton";
+  statusSkeleton.setAttribute("aria-hidden", "true");
+  status.append(statusSkeleton);
+  status.hidden = false;
+
+  const forecastList = document.querySelector("#forecast-list");
+  forecastList.replaceChildren(
+    ...Array.from({ length: 7 }, () => {
+      const card = document.createElement("div");
+      card.className = "forecast-card forecast-skeleton";
+      card.setAttribute("aria-hidden", "true");
+      const day = document.createElement("span");
+      day.className = "skeleton skeleton-day";
+      const icon = document.createElement("span");
+      icon.className = "skeleton skeleton-icon";
+      const temperatures = document.createElement("span");
+      temperatures.className = "skeleton skeleton-temperatures";
+      card.append(day, icon, temperatures);
+      return card;
+    }),
+  );
+}
+
+export function renderFavoriteToggle(location, favourites) {
+  const button = document.querySelector("#favorite-toggle");
+  const isFavourite = Boolean(location && favourites.some((favourite) =>
+    favourite.name === location.name
+    && favourite.country === location.country
+    && favourite.latitude === location.latitude
+    && favourite.longitude === location.longitude));
+
+  button.disabled = !location;
+  button.textContent = isFavourite ? "★" : "☆";
+  button.setAttribute("aria-pressed", String(isFavourite));
+  button.setAttribute(
+    "aria-label",
+    isFavourite ? "Remove current city from favourites" : "Add current city to favourites",
+  );
+}
+
 export function renderFavourites(favourites, activeCity, onSelect) {
   const list = document.querySelector("#favorites-list");
   list.replaceChildren(
@@ -117,8 +161,8 @@ export function renderFavourites(favourites, activeCity, onSelect) {
       button.className = "favorite-button";
       button.type = "button";
       button.setAttribute("aria-current", String(favourite.name === activeCity));
-      button.setAttribute("aria-label", `Show weather for ${favourite.name}`);
-      button.addEventListener("click", () => onSelect(favourite.name));
+      button.setAttribute("aria-label", `Show weather for ${favourite.name}${favourite.country ? `, ${favourite.country}` : ""}`);
+      button.addEventListener("click", () => onSelect(favourite));
 
       const city = document.createElement("span");
       city.className = "favorite-city";
