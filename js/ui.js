@@ -1,3 +1,5 @@
+import { getWeatherCode } from "./weatherCodes.js";
+
 const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "short" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: "long",
@@ -5,58 +7,67 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   day: "numeric",
 });
 
-function getForecastDay(dayOffset) {
-  const date = new Date();
-  date.setDate(date.getDate() + dayOffset);
-  return dayOffset === 0 ? "Today" : dayFormatter.format(date);
+function getForecastDay(date, index) {
+  if (index === 0) {
+    return "Today";
+  }
+
+  return dayFormatter.format(new Date(`${date}T12:00:00`));
 }
 
-function getLocalTime(timeZone) {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone,
-  }).format(new Date());
+function formatLocalTime(time) {
+  return time?.split("T")[1]?.slice(0, 5) ?? "—";
 }
 
 export function renderTodayDate(element) {
   element.textContent = dateFormatter.format(new Date());
 }
 
-export function renderWeather(weather) {
-  document.querySelector("#current-location").textContent = `${weather.city}, ${weather.country}`;
-  document.querySelector("#current-temperature").textContent = `${weather.temperature}°`;
-  document.querySelector("#current-condition").textContent = weather.condition;
-  document.querySelector("#current-icon").textContent = weather.icon;
-  document.querySelector("#current-wind").textContent = weather.wind;
-  document.querySelector("#current-time").textContent = getLocalTime(weather.timeZone);
+export function renderWeather(location, forecast) {
+  const { current, daily } = forecast;
+  const currentConditions = getWeatherCode(current.weather_code);
+  const locationName = location.country
+    ? `${location.name}, ${location.country}`
+    : location.name;
 
-  const forecast = document.querySelector("#forecast-list");
-  forecast.replaceChildren(
-    ...weather.forecast.map((day) => {
+  document.querySelector("#current-location").textContent = locationName;
+  document.querySelector("#current-temperature").textContent = `${Math.round(current.temperature_2m)}°`;
+  document.querySelector("#current-condition").textContent = currentConditions.label;
+  document.querySelector("#current-icon").textContent = currentConditions.emoji;
+  document.querySelector("#current-wind").textContent = Math.round(current.wind_speed_10m);
+  document.querySelector("#current-humidity").textContent = `${Math.round(current.relative_humidity_2m)}%`;
+  document.querySelector("#current-time").textContent = formatLocalTime(current.time);
+
+  const forecastList = document.querySelector("#forecast-list");
+  forecastList.replaceChildren(
+    ...daily.time.map((date, index) => {
+      const conditions = getWeatherCode(daily.weather_code[index]);
+      const dayName = getForecastDay(date, index);
+      const high = Math.round(daily.temperature_2m_max[index]);
+      const low = Math.round(daily.temperature_2m_min[index]);
       const card = document.createElement("article");
       card.className = "forecast-card";
-      card.setAttribute("aria-label", `${getForecastDay(day.dayOffset)}: ${day.high} degrees high, ${day.low} degrees low`);
+      card.setAttribute("aria-label", `${dayName}: ${high} degrees high, ${low} degrees low, ${conditions.label}`);
 
-      const dayName = document.createElement("span");
-      dayName.className = "forecast-day";
-      dayName.textContent = getForecastDay(day.dayOffset);
+      const dayLabel = document.createElement("span");
+      dayLabel.className = "forecast-day";
+      dayLabel.textContent = dayName;
 
       const icon = document.createElement("span");
       icon.className = "forecast-icon";
       icon.setAttribute("aria-hidden", "true");
-      icon.textContent = day.icon;
+      icon.textContent = conditions.emoji;
 
       const temperatures = document.createElement("span");
       temperatures.className = "forecast-temps";
-      const high = document.createElement("span");
-      high.textContent = `${day.high}°`;
-      const low = document.createElement("span");
-      low.className = "forecast-low";
-      low.textContent = `${day.low}°`;
-      temperatures.append(high, low);
+      const highLabel = document.createElement("span");
+      highLabel.textContent = `${high}°`;
+      const lowLabel = document.createElement("span");
+      lowLabel.className = "forecast-low";
+      lowLabel.textContent = `${low}°`;
+      temperatures.append(highLabel, lowLabel);
 
-      card.append(dayName, icon, temperatures);
+      card.append(dayLabel, icon, temperatures);
       return card;
     }),
   );
@@ -65,31 +76,31 @@ export function renderWeather(weather) {
 export function renderFavourites(favourites, activeCity, onSelect) {
   const list = document.querySelector("#favorites-list");
   list.replaceChildren(
-    ...favourites.map((weather) => {
+    ...favourites.map((favourite) => {
       const item = document.createElement("li");
       const button = document.createElement("button");
       button.className = "favorite-button";
       button.type = "button";
-      button.setAttribute("aria-current", String(weather.city === activeCity));
-      button.setAttribute("aria-label", `Show weather for ${weather.city}, ${weather.country}, ${weather.temperature} degrees`);
-      button.addEventListener("click", () => onSelect(weather.city));
+      button.setAttribute("aria-current", String(favourite.name === activeCity));
+      button.setAttribute("aria-label", `Show weather for ${favourite.name}`);
+      button.addEventListener("click", () => onSelect(favourite.name));
 
       const city = document.createElement("span");
       city.className = "favorite-city";
       const cityName = document.createElement("strong");
-      cityName.textContent = weather.city;
+      cityName.textContent = favourite.name;
       const country = document.createElement("span");
-      country.textContent = weather.country;
+      country.textContent = favourite.country;
       city.append(cityName, country);
 
       const summary = document.createElement("span");
       summary.className = "favorite-weather";
       const icon = document.createElement("span");
       icon.setAttribute("aria-hidden", "true");
-      icon.textContent = weather.icon;
-      const temperature = document.createElement("strong");
-      temperature.textContent = `${weather.temperature}°`;
-      summary.append(icon, temperature);
+      icon.textContent = "↗";
+      const action = document.createElement("strong");
+      action.textContent = "View";
+      summary.append(icon, action);
 
       button.append(city, summary);
       item.append(button);

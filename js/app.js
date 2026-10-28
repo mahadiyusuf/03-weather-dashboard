@@ -1,4 +1,4 @@
-import { getFavouriteCities, getWeather } from "./api.js";
+import { getForecast, searchCity } from "./api.js";
 import { renderFavourites, renderTodayDate, renderWeather, setStatus } from "./ui.js";
 
 const searchForm = document.querySelector("#search-form");
@@ -6,36 +6,44 @@ const searchInput = document.querySelector("#city-search");
 const statusMessage = document.querySelector("#status-message");
 const errorMessage = document.querySelector("#error-message");
 
-let favourites = [];
-let activeCity = "London";
+const favourites = [
+  { name: "London", country: "United Kingdom" },
+  { name: "Tokyo", country: "Japan" },
+  { name: "New York", country: "United States" },
+  { name: "Reykjavik", country: "Iceland" },
+];
 
-function showWeather(weather) {
-  activeCity = weather.city;
-  renderWeather(weather);
-  renderFavourites(favourites, activeCity, searchForCity);
-}
+let activeCity = "";
 
-async function searchForCity(city) {
+async function searchForCity(cityName) {
   setStatus(errorMessage, "");
-  setStatus(statusMessage, "Finding your forecast...");
+  setStatus(statusMessage, "Loading…");
 
   try {
-    const weather = await getWeather(city);
-    showWeather(weather);
+    const cities = await searchCity(cityName);
+    if (cities.length === 0) {
+      setStatus(statusMessage, `We couldn't find "${cityName}". Check the spelling and try another city.`);
+      return;
+    }
+
+    const city = cities[0];
+    const forecast = await getForecast(city.latitude, city.longitude);
+    renderWeather(city, forecast);
+    activeCity = city.name;
+    renderFavourites(favourites, activeCity, searchForCity);
     searchInput.value = "";
-    setStatus(statusMessage, `Showing placeholder weather for ${weather.city}.`);
+    setStatus(statusMessage, `Weather updated for ${city.name}.`);
   } catch (error) {
     setStatus(statusMessage, "");
-    setStatus(errorMessage, error.message);
+    setStatus(errorMessage, `Unable to load weather. ${error.message}`);
   }
 }
 
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  searchForCity(searchInput.value);
+  searchForCity(searchInput.value.trim());
 });
 
 renderTodayDate(document.querySelector("#today-date"));
-favourites = await getFavouriteCities();
-const initialWeather = await getWeather(activeCity);
-showWeather(initialWeather);
+renderFavourites(favourites, activeCity, searchForCity);
+searchForCity("London");
